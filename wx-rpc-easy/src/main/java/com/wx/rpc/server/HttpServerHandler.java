@@ -49,7 +49,12 @@ public class HttpServerHandler implements Handler<HttpServerRequest> {
                 // 获取要调用的服务实现类，通过 反射 调用
                 Class<?> impClass = LocalRegistry.get(rpcRequest.getServiceName());
                 Method method = impClass.getMethod(rpcRequest.getMethodName(), rpcRequest.getParameterTypes());
-                Object result = method.invoke(impClass.newInstance(), rpcRequest.getArgs());
+
+                // 创建目标类的实例：impClass.newInstance() 在 java9 被弃用
+//                Object result = method.invoke(impClass.newInstance(), rpcRequest.getArgs());
+
+                // impClass.getDeclaredConstructor().newInstance(): 新方式 更安全且支持选择特定的构造函数
+                Object result = method.invoke(impClass.getDeclaredConstructor().newInstance(), rpcRequest.getArgs());
 
                 // 封装返回结果
                 rpcResponse.setData(result);
