@@ -2,6 +2,7 @@ package com.wx.example.consumer;
 
 import com.wx.example.common.model.User;
 import com.wx.example.common.service.UserService;
+import com.wx.example.consumer.proxy.UserServiceProxy;
 
 /**
  * 简易服务消费者示例
@@ -9,8 +10,8 @@ import com.wx.example.common.service.UserService;
 public class EasyConsumerExample {
 
     public static void main(String[] args) {
-        // todo 需要获取 UserService 的实现类对象
-        UserService userService = null;
+        // 静态代理
+        UserService userService = new UserServiceProxy();
         User user = new User();
         user.setName("wx");
 
