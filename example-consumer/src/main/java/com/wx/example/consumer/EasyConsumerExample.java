@@ -20,7 +20,7 @@ public class EasyConsumerExample {
         user.setName("wx");
 
         // 调用
-        User newUser = userService.getUser(user);
+        User newUser = userService.getUser(user);   // 调用 getUser 方法时，实际调用被分派到 ServiceProxy 的 invoke 方法
         if (newUser != null) {
             System.out.println(newUser.getName());
         } else {

@@ -17,10 +17,11 @@ public class ServiceProxyFactory {
      * @return
      */
     public static <T> T getProxy(Class<T> serviceClass) {
+        // 创建代理对象 - Proxy.newProxyInstance
         return (T) Proxy.newProxyInstance(
                 serviceClass.getClassLoader(),
-                new Class[]{serviceClass},
-                new ServiceProxy()
+                new Class[]{serviceClass},      // 只能是接口
+                new ServiceProxy()              // InvocationHandler 实现
         );
     }
 }
