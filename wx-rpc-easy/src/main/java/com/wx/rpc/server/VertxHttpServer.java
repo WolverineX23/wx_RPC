@@ -24,7 +24,7 @@ public class VertxHttpServer implements HttpServer {
             // 发送 HTTP 响应
             request.response()
                     .putHeader("content-type", "text/plain")
-                    .end("Hellp from Vert.x HTTP server!");
+                    .end("Hello from Vert.x HTTP server!");
         });
 
         // 启动 HTTP 服务器并监听指定端口
