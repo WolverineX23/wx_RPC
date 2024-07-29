@@ -4,6 +4,7 @@ import lombok.Data;
 
 /**
  * RPC 框架配置
+ *
  * 给属性指定默认值
  */
 @Data
