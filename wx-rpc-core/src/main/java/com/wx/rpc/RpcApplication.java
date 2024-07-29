@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
  *
  * 相当于 holder, 存放了项目全局用到的变量。
  * 双检锁单例模式 实现
+ * 使用 - RpcConfig rpcConfig = RpcApplication.getRpcConfig();
  */
 @Slf4j
 public class RpcApplication {
@@ -41,6 +42,8 @@ public class RpcApplication {
 
         init(newRpcConfig);
     }
+
+    // todo: 支持不同环境的 配置文件加载实现 - environment
 
     /**
      * 获取配置
