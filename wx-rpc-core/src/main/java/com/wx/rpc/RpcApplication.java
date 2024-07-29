@@ -10,7 +10,7 @@ import lombok.extern.slf4j.Slf4j;
  *
  * 相当于 holder, 存放了项目全局用到的变量。
  * 双检锁单例模式 实现
- * 使用 - RpcConfig rpcConfig = RpcApplication.getRpcConfig();
+ * 使用 - RpcConfig rpc = RpcApplication.getRpcConfig();
  */
 @Slf4j
 public class RpcApplication {
