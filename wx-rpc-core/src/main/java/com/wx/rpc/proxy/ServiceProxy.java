@@ -2,9 +2,11 @@ package com.wx.rpc.proxy;
 
 import cn.hutool.http.HttpRequest;
 import cn.hutool.http.HttpResponse;
+import com.wx.rpc.RpcApplication;
 import com.wx.rpc.model.RpcRequest;
 import com.wx.rpc.model.RpcResponse;
 import com.wx.rpc.serializer.Serializer;
+import com.wx.rpc.serializer.SerializerFactory;
 import com.wx.rpc.serializer.impl.JdkSerializer;
 
 import java.io.IOException;
@@ -31,12 +33,22 @@ public class ServiceProxy implements InvocationHandler {
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
         // 指定序列化器
-//        Serializer serializer = new JdkSerializer();
+        /*
+         * 方式一：静态
+        Serializer serializer = new JdkSerializer();
+         */
+
+        /*
+         * 方式二：动态，java 自带 ServiceLoader 方式， 识别并加载 resources/META-INF/.. 文件中的序列化器实现类
         Serializer serializer = null;
         ServiceLoader<Serializer> serviceLoader = ServiceLoader.load(Serializer.class);
         for (Serializer service : serviceLoader) {
             serializer = service;
         }
+         */
+
+        // 方式三： 使用工厂 + 读取配置 动态获取序列化器实现类对象
+        Serializer serializer = SerializerFactory.getInstance(RpcApplication.getRpcConfig().getSerializer());
 
         // 构造请求
         RpcRequest rpcRequest = RpcRequest.builder()

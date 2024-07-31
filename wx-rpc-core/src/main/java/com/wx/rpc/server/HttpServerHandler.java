@@ -1,9 +1,11 @@
 package com.wx.rpc.server;
 
+import com.wx.rpc.RpcApplication;
 import com.wx.rpc.model.RpcRequest;
 import com.wx.rpc.model.RpcResponse;
 import com.wx.rpc.registry.LocalRegistry;
 import com.wx.rpc.serializer.Serializer;
+import com.wx.rpc.serializer.SerializerFactory;
 import com.wx.rpc.serializer.impl.JdkSerializer;
 import io.vertx.core.Handler;
 import io.vertx.core.buffer.Buffer;
@@ -21,13 +23,23 @@ public class HttpServerHandler implements Handler<HttpServerRequest> {
     @Override
     public void handle(HttpServerRequest event) {
         // 指定序列化器
-//        final Serializer serializer = new JdkSerializer();
+        /*
+         * 方式一：静态
+        final Serializer serializer = new JdkSerializer();
+         */
+
+        /*
+         * 方式二：动态，java 自带 ServiceLoader 方式， 识别并加载 resources/META-INF/.. 文件中的序列化器实现类
         Serializer initSerializer = null;
         ServiceLoader<Serializer> serviceLoader = ServiceLoader.load(Serializer.class); // 动态加载指定接口的实现类
         for (Serializer service : serviceLoader) {
             initSerializer = service;
         }
         final Serializer serializer = initSerializer;
+         */
+
+        // 方式三： 使用工厂 + 读取配置 动态获取序列化器实现类对象
+        final Serializer serializer = SerializerFactory.getInstance(RpcApplication.getRpcConfig().getSerializer());
 
         // 记录日志
         System.out.println("Received request: " + event.method() + " " + event.uri());
