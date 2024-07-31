@@ -11,6 +11,7 @@ import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.HttpServerResponse;
 
 import java.lang.reflect.Method;
+import java.util.ServiceLoader;
 
 /**
  * Vert.x HTTP 请求处理器
@@ -20,7 +21,13 @@ public class HttpServerHandler implements Handler<HttpServerRequest> {
     @Override
     public void handle(HttpServerRequest event) {
         // 指定序列化器
-        final Serializer serializer = new JdkSerializer();
+//        final Serializer serializer = new JdkSerializer();
+        Serializer initSerializer = null;
+        ServiceLoader<Serializer> serviceLoader = ServiceLoader.load(Serializer.class); // 动态加载指定接口的实现类
+        for (Serializer service : serviceLoader) {
+            initSerializer = service;
+        }
+        final Serializer serializer = initSerializer;
 
         // 记录日志
         System.out.println("Received request: " + event.method() + " " + event.uri());

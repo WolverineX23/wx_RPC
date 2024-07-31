@@ -10,6 +10,7 @@ import com.wx.rpc.serializer.Serializer;
 import com.wx.rpc.serializer.impl.JdkSerializer;
 
 import java.io.IOException;
+import java.util.ServiceLoader;
 
 /**
  * UserService服务 静态代理
@@ -23,7 +24,12 @@ public class UserServiceProxy implements UserService {
 
     public User getUser(User user) {
         // 指定序列化器
-        Serializer serializer = new JdkSerializer();
+//        Serializer serializer = new JdkSerializer();
+        Serializer serializer = null;
+        ServiceLoader<Serializer> serviceLoader = ServiceLoader.load(Serializer.class);
+        for (Serializer service : serviceLoader) {
+            serializer = service;
+        }
 
         // 配置请求信息
         RpcRequest rpcRequest = RpcRequest.builder()
