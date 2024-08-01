@@ -4,6 +4,7 @@ import com.wx.rpc.serializer.impl.HessianSerializer;
 import com.wx.rpc.serializer.impl.JdkSerializer;
 import com.wx.rpc.serializer.impl.JsonSerializer;
 import com.wx.rpc.serializer.impl.KryoSerializer;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -14,6 +15,7 @@ import java.util.Map;
  * 由于序列化器对象的可复用性，不需每次执行序列化操作前都创建一个新的对象
  * 可使用 工厂模式 + 单例模式 来简化创建和获取序列化器对象的操作
  */
+@Slf4j
 public class SerializerFactory {
 
     /**
@@ -40,6 +42,10 @@ public class SerializerFactory {
      * @return
      */
     public static Serializer getInstance(String key) {
-        return KEY_SERIALIZER_MAP.getOrDefault(key, DEFAULT_SERIALIZER);
+
+        Serializer serializer = KEY_SERIALIZER_MAP.getOrDefault(key, DEFAULT_SERIALIZER);
+        log.info("Get Serializer: {}", serializer.getClass().getName());
+
+        return serializer;
     }
 }
