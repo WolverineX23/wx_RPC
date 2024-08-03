@@ -18,6 +18,7 @@
         <hessian.vervion>4.0.66</hessian.vervion>
         <kryo.version>5.6.0</kryo.version>
         <jackson.verison>2.12.5</jackson.verison>
+        <jetcd.version>0.7.7</jetcd.version>
     </properties>
 
     <dependencies>
@@ -70,6 +71,13 @@
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
             <version>${jackson.verison}</version>
+        </dependency>
+
+        <!-- Etcd 的 Java 客户端 -->
+        <dependency>
+            <groupId>io.etcd</groupId>
+            <artifactId>jetcd-core</artifactId>
+            <version>${jetcd.version}</version>
         </dependency>
     </dependencies>
 
