@@ -1,0 +1,2 @@
+json=com.wx.rpc.serializer.impl.JsonSerializer
+kryo=com.wx.rpc.serializer.impl.KryoSerializer
