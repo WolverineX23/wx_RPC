@@ -42,6 +42,9 @@ public class SpiLoader {
 
     /**
      * 扫描路径
+     *
+     * 实现 CUSTOM 优先级高于 SYSTEM：
+     * SYSTEM 在 CUSTOM 之前，在 load 的时候， CUSTOM 会后加载覆盖与 SYSTEM 中相同 key 的 hash
      */
     private static final String[] SCAN_DIRS = new String[]{RPC_SYSTEM_SPI_DIR, RPC_CUSTOM_SPI_DIR};
 
