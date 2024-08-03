@@ -1,2 +1,4 @@
 jdk=com.wx.rpc.serializer.impl.JdkSerializer
 hessian=com.wx.rpc.serializer.impl.HessianSerializer
+json=com.wx.rpc.serializer.impl.JsonSerializer
+kryo=com.wx.rpc.serializer.impl.KryoSerializer
