@@ -1,8 +1,9 @@
-package com.wx.rpc.registry;
+package com.wx.rpc.registry.impl;
 
 import cn.hutool.json.JSONUtil;
 import com.wx.rpc.config.RegistryConfig;
 import com.wx.rpc.model.ServiceMetaInfo;
+import com.wx.rpc.registry.Registry;
 import io.etcd.jetcd.*;
 import io.etcd.jetcd.options.GetOption;
 import io.etcd.jetcd.options.PutOption;
@@ -16,7 +17,7 @@ import java.util.stream.Collectors;
  * Etcd 注册中心
  *
  */
-public class EtcdRegistry implements Registry{
+public class EtcdRegistry implements Registry {
 
     private Client client;
 

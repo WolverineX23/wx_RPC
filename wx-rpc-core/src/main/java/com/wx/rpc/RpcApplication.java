@@ -1,7 +1,10 @@
 package com.wx.rpc;
 
+import com.wx.rpc.config.RegistryConfig;
 import com.wx.rpc.config.RpcConfig;
 import com.wx.rpc.constant.RpcConstant;
+import com.wx.rpc.registry.Registry;
+import com.wx.rpc.registry.RegistryFactory;
 import com.wx.rpc.utils.ConfigUtils;
 import lombok.extern.slf4j.Slf4j;
 
@@ -19,12 +22,19 @@ public class RpcApplication {
 
     /**
      * 框架初始化，支持传入自定义配置
+     * 注册中心初始化: 服务提供者和服务消费者都需要和注册中心建立连接，故可将 注册中心初始化流程放在此处
      *
      * @param newRpcConfig
      */
     public static void init(RpcConfig newRpcConfig) {
         rpcConfig = newRpcConfig;
         log.info("rpc init, config = {}", newRpcConfig.toString());
+
+        // 注册中心初始化
+        RegistryConfig registryConfig = rpcConfig.getRegistryConfig();
+        Registry registry = RegistryFactory.getInstance(registryConfig.getRegistry());
+        registry.init(registryConfig);
+        log.info("registry init, config = {}", registryConfig);
     }
 
     /**
