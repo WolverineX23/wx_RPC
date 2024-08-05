@@ -5,18 +5,22 @@ import com.wx.rpc.config.RegistryConfig;
 import com.wx.rpc.model.ServiceMetaInfo;
 import com.wx.rpc.registry.Registry;
 import io.etcd.jetcd.*;
+import io.etcd.jetcd.kv.DeleteResponse;
 import io.etcd.jetcd.options.GetOption;
 import io.etcd.jetcd.options.PutOption;
+import lombok.extern.slf4j.Slf4j;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
 /**
  * Etcd 注册中心
  *
  */
+@Slf4j
 public class EtcdRegistry implements Registry {
 
     private Client client;
@@ -56,7 +60,7 @@ public class EtcdRegistry implements Registry {
         Lease leaseClient = client.getLeaseClient();
 
         // 创建一个 30 秒的租约
-        long leaseId = leaseClient.grant(30).get().getID();
+        long leaseId = leaseClient.grant(3000).get().getID();
 
         // 设置要存储的键值对
         String registerKey = ETCD_ROOT_PATH + serviceMetaInfo.getServiceNodeKey();
@@ -74,11 +78,20 @@ public class EtcdRegistry implements Registry {
      * 注销服务
      * 删除 key
      *
+     * 仅 delete(key) 方法：异步操作，立即返回一个 CompletableFuture<DeleteResponse> 对象，而不会等待删除操作完成。
+     * delete(key) 方法后，加一个 get() 方法：作用是(同步操作)阻塞主线程，直到 delete 操作完成，并返回 DeleteResponse 对象，获取删除信息
+     *
      * @param serviceMetaInfo
      */
     @Override
     public void unRegister(ServiceMetaInfo serviceMetaInfo) {
-        kvClient.delete(ByteSequence.from(ETCD_ROOT_PATH + serviceMetaInfo.getServiceNodeKey(), StandardCharsets.UTF_8));
+        try {
+            DeleteResponse response = kvClient.delete(ByteSequence.from(ETCD_ROOT_PATH + serviceMetaInfo.getServiceNodeKey(), StandardCharsets.UTF_8))
+                    .get();
+            log.info("UnRegistry succeed: {}", response);
+        } catch (ExecutionException | InterruptedException e) {
+            log.info("UnRegistry failed cause {}", e.toString());
+        }
     }
 
     /**

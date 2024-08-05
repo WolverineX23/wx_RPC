@@ -4,6 +4,7 @@ import com.wx.rpc.config.RegistryConfig;
 import com.wx.rpc.model.ServiceMetaInfo;
 
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 /**
  * 注册中心接口
@@ -33,7 +34,7 @@ public interface Registry {
      *
      * @param serviceMetaInfo
      */
-    void unRegister(ServiceMetaInfo serviceMetaInfo);
+    void unRegister(ServiceMetaInfo serviceMetaInfo) throws ExecutionException, InterruptedException;
 
     /**
      * 服务发现（获取某服务的所有节点，消费端）
