@@ -65,7 +65,7 @@ public class RegistryTest {
     }
 
     /**
-     * 服务
+     * 服务注销
      *
      */
     @Test
@@ -78,6 +78,10 @@ public class RegistryTest {
         registry.unRegister(serviceMetaInfo);
     }
 
+    /**
+     * 服务发现
+     *
+     */
     @Test
     public void serviceDiscovery() {
         ServiceMetaInfo serviceMetaInfo = new ServiceMetaInfo();
@@ -88,5 +92,21 @@ public class RegistryTest {
         List<ServiceMetaInfo> serviceMetaInfoList = registry.serviceDiscovery(serviceKey);
         Assert.assertNotNull(serviceMetaInfoList);
         System.out.println("Service list: " + serviceMetaInfoList);
+    }
+
+    /**
+     * 心跳检测与续期机制 测试
+     *
+     * 用 etcdkeeper 观察节点底部的过期时间，当 TTL 到 20 的时候，又会重置为 30
+     *
+     * @throws Exception
+     */
+    @Test
+    public void heartBeat() throws Exception {
+        // init 方法中已经执行了 心跳检测
+        register();
+
+        // 阻塞 1 分钟
+        Thread.sleep(60 * 1000L);
     }
 }
