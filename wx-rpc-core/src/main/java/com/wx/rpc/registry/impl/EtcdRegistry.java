@@ -1,5 +1,8 @@
 package com.wx.rpc.registry.impl;
 
+import cn.hutool.core.collection.CollUtil;
+import cn.hutool.cron.CronUtil;
+import cn.hutool.cron.task.Task;
 import cn.hutool.json.JSONUtil;
 import com.wx.rpc.config.RegistryConfig;
 import com.wx.rpc.model.ServiceMetaInfo;
@@ -12,7 +15,9 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
@@ -33,6 +38,11 @@ public class EtcdRegistry implements Registry {
     private static final String ETCD_ROOT_PATH = "/rpc/";
 
     /**
+     * 本机注册的节点 key 集合（用于维护续期）
+     */
+    private final Set<String> localRegistryNodeKeySet = new HashSet<>();
+
+    /**
      * 初始化
      * 读取注册中心配置并初始化客户端对象
      *
@@ -45,6 +55,8 @@ public class EtcdRegistry implements Registry {
                 .connectTimeout(Duration.ofMillis(registryConfig.getTimeout()))
                 .build();
         kvClient = client.getKVClient();
+
+        heartBeat();    // 启动心跳检测
     }
 
     /**
@@ -60,7 +72,7 @@ public class EtcdRegistry implements Registry {
         Lease leaseClient = client.getLeaseClient();
 
         // 创建一个 30 秒的租约
-        long leaseId = leaseClient.grant(3000).get().getID();
+        long leaseId = leaseClient.grant(30).get().getID();
 
         // 设置要存储的键值对
         String registerKey = ETCD_ROOT_PATH + serviceMetaInfo.getServiceNodeKey();
@@ -72,6 +84,9 @@ public class EtcdRegistry implements Registry {
                 .withLeaseId(leaseId)
                 .build();
         kvClient.put(key, value, putOption).get();
+
+        // 添加节点信息到本地缓存
+        localRegistryNodeKeySet.add(registerKey);
     }
 
     /**
@@ -86,9 +101,13 @@ public class EtcdRegistry implements Registry {
     @Override
     public void unRegister(ServiceMetaInfo serviceMetaInfo) {
         try {
-            DeleteResponse response = kvClient.delete(ByteSequence.from(ETCD_ROOT_PATH + serviceMetaInfo.getServiceNodeKey(), StandardCharsets.UTF_8))
+            String registerKey = ETCD_ROOT_PATH + serviceMetaInfo.getServiceNodeKey();
+            DeleteResponse response = kvClient.delete(ByteSequence.from(registerKey, StandardCharsets.UTF_8))
                     .get();
             log.info("UnRegistry succeed: {}", response);
+
+            // 从本地缓存移除
+            localRegistryNodeKeySet.remove(registerKey);
         } catch (ExecutionException | InterruptedException e) {
             log.info("UnRegistry failed cause {}", e.toString());
         }
@@ -143,5 +162,45 @@ public class EtcdRegistry implements Registry {
         if (client != null) {
             client.close();
         }
+    }
+
+    /**
+     * 心跳检测
+     * 使用 hutool 的 CronUtil 实现定时任务，对所有集合中的节点执行 重新注册 操作 - 续签
+     *
+     */
+    @Override
+    public void heartBeat() {
+        // 10s 续签一次
+        CronUtil.schedule("*/10 * * * * *", new Task() {
+            @Override
+            public void execute() {
+                // 遍历本节点所有的 key
+                for (String key : localRegistryNodeKeySet) {
+                    try {
+                        List<KeyValue> keyValues = kvClient.get(ByteSequence.from(key, StandardCharsets.UTF_8))
+                                .get()
+                                .getKvs();
+
+                        // 该节点已过期（需要重启节点才能重新注册）
+                        if (CollUtil.isEmpty(keyValues)) {
+                            continue;
+                        }
+
+                        // 节点未过期，重新注册 - 续签
+                        KeyValue keyValue = keyValues.get(0);
+                        String value = keyValue.getValue().toString(StandardCharsets.UTF_8);
+                        ServiceMetaInfo serviceMetaInfo = JSONUtil.toBean(value, ServiceMetaInfo.class);
+                        register(serviceMetaInfo);
+                    } catch (Exception e) {
+                        throw new RuntimeException(key + "续签失败", e);
+                    }
+                }
+            }
+        });
+
+        // 支持秒级别定时任务
+        CronUtil.setMatchSecond(true);
+        CronUtil.start();
     }
 }
