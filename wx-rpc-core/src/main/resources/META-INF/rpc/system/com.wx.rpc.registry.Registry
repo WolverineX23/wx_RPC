@@ -1,1 +1,2 @@
 etcd=com.wx.rpc.registry.impl.EtcdRegistry
+zookeeper=com.wx.rpc.registry.impl.ZooKeeperRegistry
