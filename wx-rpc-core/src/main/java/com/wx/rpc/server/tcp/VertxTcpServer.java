@@ -40,6 +40,8 @@ public class VertxTcpServer implements HttpServer {
         NetServer server = vertx.createNetServer();
 
         // 处理请求
+        server.connectHandler(new TcpServerHandler());
+        /* old demo
         server.connectHandler(socket -> {
             // 处理连接
             socket.handler(buffer -> {
@@ -53,6 +55,7 @@ public class VertxTcpServer implements HttpServer {
                 socket.write(Buffer.buffer(responseData));
             });
         });
+         */
 
         // 启动 TCP 服务器并监听指定端口
         server.listen(port, result -> {
