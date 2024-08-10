@@ -33,6 +33,7 @@ public class ConsumerExample {
             System.out.println("调用了模拟服务1：user == null");
         }
 
+        /* test
         // 调用2
         User newUser2 = userService.getUser(user);
         if (newUser2 != null) {
@@ -48,6 +49,7 @@ public class ConsumerExample {
         } else {
             System.out.println("调用了模拟服务3：user == null");
         }
+         */
 
         short num = userService.getNumber();
         System.out.println(num);
