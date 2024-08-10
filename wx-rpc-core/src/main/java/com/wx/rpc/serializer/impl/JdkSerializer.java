@@ -18,7 +18,7 @@ public class JdkSerializer implements Serializer {
      * @throws IOException
      */
     @Override
-    public <T> byte[] serializer(T object) throws IOException {
+    public <T> byte[] serialize(T object) throws IOException {
         // 创建字节输出流：是内存中一个可写入和存储字节数组的缓冲区
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 
@@ -41,7 +41,7 @@ public class JdkSerializer implements Serializer {
      * @throws IOException
      */
     @Override
-    public <T> T deserializer(byte[] bytes, Class<T> type) throws IOException {
+    public <T> T deserialize(byte[] bytes, Class<T> type) throws IOException {
         ByteArrayInputStream inputStream = new ByteArrayInputStream(bytes);
         ObjectInputStream objectInputStream = new ObjectInputStream(inputStream);
         try {

@@ -53,13 +53,13 @@ public class UserServiceProxy implements UserService {
 
         // 序列化 + 发送请求 / 反序列化 + 处理响应
         try {
-            byte[] bodyBytes = serializer.serializer(rpcRequest);
+            byte[] bodyBytes = serializer.serialize(rpcRequest);
             byte[] result;
 
             try (HttpResponse httpResponse = HttpRequest.post("http://localhost:8080").body(bodyBytes).execute()) {
                 result = httpResponse.bodyBytes();
             }
-            RpcResponse rpcResponse = serializer.deserializer(result, RpcResponse.class);
+            RpcResponse rpcResponse = serializer.deserialize(result, RpcResponse.class);
             return (User) rpcResponse.getData();
         } catch (IOException e) {
             e.printStackTrace();

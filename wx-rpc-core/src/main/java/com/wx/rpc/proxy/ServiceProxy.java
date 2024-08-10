@@ -68,7 +68,7 @@ public class ServiceProxy implements InvocationHandler {
 
         try {
             // 序列化
-            byte[] bodyBytes = serializer.serializer(rpcRequest);
+            byte[] bodyBytes = serializer.serialize(rpcRequest);
 
             /* 发送请求 old
              * todo 注意，这里地址被硬编码了（需要使用注册中心和服务发现机制解决）
@@ -100,7 +100,7 @@ public class ServiceProxy implements InvocationHandler {
                 byte[] result = httpResponse.bodyBytes();
 
                 // 反序列化
-                RpcResponse rpcResponse = serializer.deserializer(result, RpcResponse.class);
+                RpcResponse rpcResponse = serializer.deserialize(result, RpcResponse.class);
                 return rpcResponse.getData();
             }
         } catch (IOException e) {

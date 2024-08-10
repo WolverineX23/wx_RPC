@@ -17,12 +17,12 @@ public class JsonSerializer implements Serializer {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     @Override
-    public <T> byte[] serializer(T object) throws IOException {
+    public <T> byte[] serialize(T object) throws IOException {
         return OBJECT_MAPPER.writeValueAsBytes(object);
     }
 
     @Override
-    public <T> T deserializer(byte[] bytes, Class<T> type) throws IOException {
+    public <T> T deserialize(byte[] bytes, Class<T> type) throws IOException {
         T object = OBJECT_MAPPER.readValue(bytes, type);
         if (object instanceof RpcRequest) {
             return handleRequest((RpcRequest) object, type);

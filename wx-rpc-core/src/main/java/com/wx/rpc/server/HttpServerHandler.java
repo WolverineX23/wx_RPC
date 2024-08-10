@@ -49,7 +49,7 @@ public class HttpServerHandler implements Handler<HttpServerRequest> {
             byte[] bytes = body.getBytes();
             RpcRequest rpcRequest = null;
             try {
-                rpcRequest = serializer.deserializer(bytes, RpcRequest.class);
+                rpcRequest = serializer.deserialize(bytes, RpcRequest.class);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -96,7 +96,7 @@ public class HttpServerHandler implements Handler<HttpServerRequest> {
 
         try {
             // 序列化
-            byte[] serialized = serializer.serializer(rpcResponse);
+            byte[] serialized = serializer.serialize(rpcResponse);
             httpServerResponse.end(Buffer.buffer(serialized));
         } catch (Exception e) {
             e.printStackTrace();
