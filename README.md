@@ -175,12 +175,12 @@ etcd v3.5.12  +  etcdkeeper
 ![Buffer 编码/解码器](wx-rpc-src/img/buffer_encode_decode.png)
    - 粘包问题处理
    - 区别 HTTP 请求和响应
-      - **实现的处理器接口**：HTTP - Handler<HttpServerRequest> ***vs*** TCP - Handler<NetSocket>
-      - **HTTP 传输过程**：
-        - **接受请求并发送响应**：直接获取请求体（***`HttpServerRequest.bodyHandler`***）→***`body.getBytes[]`*** 获取 byte[] 格式请求体数据→反序列化→处理请求得到响应结果→序列化为 byte[] 数据→格式转换为 Buffer，发送 HTTP 响应***`httpServerResponse.end(Buffer.buffer(serializedRes));`***
+      - **实现的处理器接口**：HTTP - `Handler<HttpServerRequest>` ***vs*** TCP - `Handler<NetSocket>`
+    - **HTTP 传输过程**：
+        - **接受请求并发送响应**：直接获取请求体（***`HttpServerRequest.bodyHandler`***）→ ***`body.getBytes[]`*** 获取 byte[] 格式请求体数据 → 反序列化 → 处理请求得到响应结果→序列化为 byte[] 数据 → 格式转换为 Buffer，发送 HTTP 响应 ***`httpServerResponse.end(Buffer.buffer(serializedRes));`***
         - **发送请求并获取响应**：同理。
-      - **TCP 传输过程**：
-        - **接受请求并发送响应**：接收整个请求信息→解码（分别读取**指定字节数**的各个请求字段的信息【Buffer 转 byte、long、byte[]等 - ***`Buffer.getByte(pos);`***等】，其中包括用于（反）序列化请求体的序列化器的 key，得到对应的序列化实例**反序列化**请求体信息、通过请求头中的***`bodyLength`***字段处理**粘包问题**）→处理请求得到响应结果→编码（将响应头中的各个字段 转为 Buffer 写入 Buffer 字节缓冲区【***`Buffer.appendByte(byte magic)`***等】、将响应体序列化为 byte[]后，同样 转为 Buffer 写入）→发送 TCP 响应***`NetSocket.write(encodeBuffer);`***
+    - **TCP 传输过程**：
+        - **接受请求并发送响应**：接收整个请求信息 → 解码（分别读取**指定字节数**的各个请求字段的信息【Buffer 转 byte、long、byte[]等 - ***`Buffer.getByte(pos);`*** 等】，其中包括用于（反）序列化请求体的序列化器的 key，得到对应的序列化实例 **反序列化** 请求体信息、通过请求头中的 ***`bodyLength`*** 字段处理 **粘包问题** ） → 处理请求得到响应结果→编码（将响应头中的各个字段 转为 Buffer 写入 Buffer 字节缓冲区【 ***`Buffer.appendByte(byte magic)`*** 等】、将响应体序列化为 byte[]后，同样 转为 Buffer 写入） → 发送 TCP 响应 ***`NetSocket.write(encodeBuffer);`***
         - **发送请求并获取响应**：同理。
-4. **TCP 请求处理器（服务提供者）**：实现接口 ***`Handler<NetSocket>`***；流程如下，接收 TCP 请求（解码）→反射机制调用本地方法获取结果→构造响应消息（编码）→发送 TCP 响应。
+4. **TCP 请求处理器（服务提供者）**：实现接口 ***`Handler<NetSocket>`***；流程如下，接收 TCP 请求（解码） → 反射机制调用本地方法获取结果 → 构造响应消息（编码） → 发送 TCP 响应。
 5. **TCP 请求发送（服务消费者）**：替代原 HTTP 请求发送和接收响应的实现，改用 TCP，基于 ***NetClient*** 实现；可使用 ***`CompletableFuture<RpcResponse>`***`，同步接收请求的响应返回。
