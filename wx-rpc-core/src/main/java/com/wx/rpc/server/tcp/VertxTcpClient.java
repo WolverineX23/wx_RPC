@@ -18,8 +18,10 @@ public class VertxTcpClient {
                 System.out.println("Connected to TCP server!");
                 NetSocket socket = result.result();
 
-                // 发送数据
-                socket.write("Hello, server!");
+                for (int i = 0; i < 1000; i++) {
+                    // 发送数据
+                    socket.write("Hello, server!Hello, server!Hello, server!Hello, server!");
+                }
 
                 // 接收响应
                 socket.handler(buffer -> {

@@ -40,11 +40,33 @@ public class VertxTcpServer implements HttpServer {
         NetServer server = vertx.createNetServer();
 
         // 处理请求
-        server.connectHandler(new TcpServerHandler());
-        /* old demo
+//        server.connectHandler(new TcpServerHandler());
         server.connectHandler(socket -> {
             // 处理连接
             socket.handler(buffer -> {
+                String testMessage = "Hello, server!Hello, server!Hello, server!Hello, server!";
+                int messageLength = testMessage.getBytes().length;
+
+                // 出现半包问题
+                if (buffer.getBytes().length < messageLength) {
+                    System.out.println("原包：length = " + messageLength + " 出现半包：length = " + buffer.getBytes().length);
+                    return;
+                }
+
+                // 出现粘包问题
+                if (buffer.getBytes().length > messageLength) {
+                    System.out.println("原包：length = " + messageLength + " 出现粘包：length = " + buffer.getBytes().length);
+                    return;
+                }
+
+                // 比较响应结果
+                String str = new String(buffer.getBytes(0, messageLength));
+                System.out.println("接收到包：" + str);
+                if (testMessage.equals(str)) {
+                    System.out.println("good");
+                }
+
+                /* test 半包/粘包问题时，先注释掉这块
                 // 处理接收到的字节数组
                 byte[] requestData = buffer.getBytes();
 
@@ -53,9 +75,9 @@ public class VertxTcpServer implements HttpServer {
 
                 // 发送响应
                 socket.write(Buffer.buffer(responseData));
+                 */
             });
         });
-         */
 
         // 启动 TCP 服务器并监听指定端口
         server.listen(port, result -> {
