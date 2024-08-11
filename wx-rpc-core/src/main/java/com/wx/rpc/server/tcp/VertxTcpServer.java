@@ -1,9 +1,11 @@
 package com.wx.rpc.server.tcp;
 
 import com.wx.rpc.server.HttpServer;
+import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.net.NetServer;
+import io.vertx.core.parsetools.RecordParser;
 
 /**
  * TCP 服务器
@@ -41,6 +43,29 @@ public class VertxTcpServer implements HttpServer {
 
         // 处理请求
 //        server.connectHandler(new TcpServerHandler());
+
+        // test RecordParser 解决半包/粘包问题
+        server.connectHandler(socket -> {
+            String testMessage = "Hello, server!Hello, server!Hello, server!Hello, server!";
+            int messageLength = testMessage.getBytes().length;
+
+            // 构造 RecordParser
+            RecordParser parser = RecordParser.newFixed(messageLength); // 读取固定长度值的内容
+            parser.setOutput(new Handler<Buffer>() {
+                @Override
+                public void handle(Buffer buffer) {
+                    String str = new String(buffer.getBytes());
+                    System.out.println("Buffer content: " + str);
+                    if (testMessage.equals(str)) {
+                        System.out.println("good");
+                    }
+                }
+            });
+
+            socket.handler(parser);
+        });
+
+        /* test 半包/粘包问题演示
         server.connectHandler(socket -> {
             // 处理连接
             socket.handler(buffer -> {
@@ -66,18 +91,18 @@ public class VertxTcpServer implements HttpServer {
                     System.out.println("good");
                 }
 
-                /* test 半包/粘包问题时，先注释掉这块
+                // test 半包/粘包问题时，先注释掉下面这段
                 // 处理接收到的字节数组
-                byte[] requestData = buffer.getBytes();
+//                byte[] requestData = buffer.getBytes();
 
                 // 在这里进行自定义的字节数组处理逻辑，比如解析请求、调用服务、构造响应等
-                byte[] responseData = handleRequest(requestData);
+//                byte[] responseData = handleRequest(requestData);
 
                 // 发送响应
-                socket.write(Buffer.buffer(responseData));
-                 */
+//                socket.write(Buffer.buffer(responseData));
             });
         });
+         */
 
         // 启动 TCP 服务器并监听指定端口
         server.listen(port, result -> {
