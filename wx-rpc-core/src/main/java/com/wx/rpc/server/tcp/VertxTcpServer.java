@@ -46,18 +46,33 @@ public class VertxTcpServer implements HttpServer {
 
         // test RecordParser 解决半包/粘包问题
         server.connectHandler(socket -> {
-            String testMessage = "Hello, server!Hello, server!Hello, server!Hello, server!";
-            int messageLength = testMessage.getBytes().length;
-
             // 构造 RecordParser
-            RecordParser parser = RecordParser.newFixed(messageLength); // 读取固定长度值的内容
+            RecordParser parser = RecordParser.newFixed(8); // 读取固定长度值的内容 - 测试中是 请求头的 两个 int 值
             parser.setOutput(new Handler<Buffer>() {
+                // 初始化
+                int size = -1;
+
+                // 一次完整的读取（头 + 体）
+                Buffer resultBuffer = Buffer.buffer();
+
                 @Override
                 public void handle(Buffer buffer) {
-                    String str = new String(buffer.getBytes());
-                    System.out.println("Buffer content: " + str);
-                    if (testMessage.equals(str)) {
-                        System.out.println("good");
+                    if (size == -1) {
+                        // 读取请求体长度
+                        size = buffer.getInt(4);
+                        parser.fixedSizeMode(size);     // 设置 parse 长度，下一步获取请求体长度
+
+                        // 写入头信息到结果
+                        resultBuffer.appendBuffer(buffer);
+                    } else {
+                        // 写入体信息到结果
+                        resultBuffer.appendBuffer(buffer);
+                        System.out.println("get TCP package: " + resultBuffer.toString());
+
+                        // 重置一轮
+                        parser.fixedSizeMode(8);
+                        size = -1;
+                        resultBuffer = Buffer.buffer();
                     }
                 }
             });
