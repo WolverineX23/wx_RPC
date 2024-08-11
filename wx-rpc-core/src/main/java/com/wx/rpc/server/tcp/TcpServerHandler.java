@@ -19,10 +19,23 @@ import java.lang.reflect.Method;
  */
 public class TcpServerHandler implements Handler<NetSocket> {
 
+    /**
+     * 处理请求
+     *
+     * @param socket
+     */
     @Override
-    public void handle(NetSocket event) {
+    public void handle(NetSocket socket) {
         // 处理连接
-        event.handler(buffer -> {
+
+        /* 原 处理方式
+        socket.handler(buffer -> {
+            // 请求处理代码
+        });
+         */
+
+        // 装饰者模式 RecordParser增强处理
+        TcpBufferHandlerWrapper bufferHandlerWrapper = new TcpBufferHandlerWrapper(buffer -> {
             // 接收请求，解码
             ProtocolMessage<RpcRequest> protocolMessage;
 
@@ -59,10 +72,12 @@ public class TcpServerHandler implements Handler<NetSocket> {
 
             try {
                 Buffer encodeBuffer = ProtocolMessageEncoder.encode(responseProtocolMessage);
-                event.write(encodeBuffer);
+                socket.write(encodeBuffer);
             } catch (IOException e) {
                 throw new RuntimeException("TPC 请求处理器：协议消息编码错误！");
             }
         });
+
+        socket.handler(bufferHandlerWrapper);
     }
 }
