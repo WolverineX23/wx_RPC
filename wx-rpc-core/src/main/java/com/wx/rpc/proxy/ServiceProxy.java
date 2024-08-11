@@ -7,6 +7,8 @@ import cn.hutool.http.HttpResponse;
 import com.wx.rpc.RpcApplication;
 import com.wx.rpc.config.RpcConfig;
 import com.wx.rpc.constant.RpcConstant;
+import com.wx.rpc.loadbalancer.LoadBalancer;
+import com.wx.rpc.loadbalancer.LoadBalancerFactory;
 import com.wx.rpc.model.RpcRequest;
 import com.wx.rpc.model.RpcResponse;
 import com.wx.rpc.model.ServiceMetaInfo;
@@ -30,7 +32,9 @@ import io.vertx.core.net.NetSocket;
 import java.io.IOException;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.ServiceLoader;
 import java.util.concurrent.CompletableFuture;
 
@@ -77,7 +81,16 @@ public class ServiceProxy implements InvocationHandler {
             if (CollUtil.isEmpty(serviceMetaInfoList)) {
                 throw new RuntimeException("暂无服务地址");
             }
-            ServiceMetaInfo selectedServiceMetaInfo = serviceMetaInfoList.get(0);
+
+            // 负载均衡
+            LoadBalancer loadBalancer = LoadBalancerFactory.getInstance(rpcConfig.getLoadBalancer());
+
+            // 将调用方法名（请求路径）作为负载均衡参数 - 若使用 一致性 Hash 负载均衡器，则调用相同方法的请求总会打到同一个服务器节点上
+            Map<String, Object> requestParams = new HashMap<>();
+            requestParams.put("methodName", rpcRequest.getMethodName());
+            ServiceMetaInfo selectedServiceMetaInfo = loadBalancer.select(requestParams, serviceMetaInfoList);
+
+//            ServiceMetaInfo selectedServiceMetaInfo = serviceMetaInfoList.get(0);
 
             // 发送 TCP 请求， 获取响应结果
             RpcResponse rpcResponse = VertxTcpClient.doRequest(rpcRequest, selectedServiceMetaInfo);
