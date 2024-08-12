@@ -295,3 +295,25 @@ try {
 和序列化器、注册中心、负载均衡器一样，重试策略本身也可用 ***SPI*** + **工厂** 的方式，允许开发者动态配置和扩展自己的重试策略。
 
 最后，如果重试超过一定次数，我们就**停止重试**，并且抛出异常。
+### 实现
+1. **实现多种重试策略**：借助 ***`guava-retrying`*** 库 和 ***`Callable`*** 类 轻松实现。
+2. **支持动态配置和扩重试器**：SPI 机制和 工厂模式 实现。
+3. **服务请求端 `ServiceProxy` 应用重试功能**：将原先的请求动作 作为一个 ***`Callable`*** 任务参数，传入到读取配置并通过工厂类创建特定重试器的重试方法中，如下：
+```java
+try {
+    // ...
+
+    // 发送 TCP 请求， 获取响应结果
+//            RpcResponse rpcResponse = VertxTcpClient.doRequest(rpcRequest, selectedServiceMetaInfo);    
+    // 使用 重试机制
+    RetryStrategy retryStrategy = RetryStrategyFactory.getInstance(rpcConfig.getRetryStrategy());
+    RpcResponse rpcResponse = retryStrategy.doRetry(() ->
+    VertxTcpClient.doRequest(rpcRequest, selectedServiceMetaInfo)
+);
+    return rpcResponse.getData();
+} catch (Exception e) {
+    throw new RuntimeException("调用失败");
+}
+```
+### TODO
+- [ ] 新增更多不同类型的重试器
