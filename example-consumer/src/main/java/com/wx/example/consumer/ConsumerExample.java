@@ -2,6 +2,7 @@ package com.wx.example.consumer;
 
 import com.wx.example.common.model.User;
 import com.wx.example.common.service.UserService;
+import com.wx.rpc.bootstrap.ConsumerBootstrap;
 import com.wx.rpc.config.RpcConfig;
 import com.wx.rpc.proxy.ServiceProxyFactory;
 import com.wx.rpc.utils.ConfigUtils;
@@ -19,6 +20,9 @@ public class ConsumerExample {
 
         // 服务调用
          */
+
+        // 服务提供者初始化
+        ConsumerBootstrap.init();
 
         // 获取代理
         UserService userService = ServiceProxyFactory.getProxy(UserService.class);
