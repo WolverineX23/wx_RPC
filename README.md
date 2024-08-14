@@ -297,8 +297,8 @@ try {
 最后，如果重试超过一定次数，我们就**停止重试**，并且抛出异常。
 ### 实现
 1. **实现多种重试策略**：借助 ***`guava-retrying`*** 库 和 ***`Callable`*** 类 轻松实现。
-2. **支持动态配置和扩重试器**：SPI 机制和 工厂模式 实现。
-3. **服务请求端 `ServiceProxy` 应用重试功能**：将原先的请求动作 作为一个 ***`Callable`*** 任务参数，传入到读取配置并通过工厂类创建特定重试器的重试方法中，如下：
+2. **支持动态配置和扩展重试器**：SPI 机制和 工厂模式 实现。
+3. **服务消费端 `ServiceProxy` 应用重试功能**：将原先的请求动作 作为一个 ***`Callable`*** 任务参数，传入到读取配置并通过工厂类创建特定重试器的重试方法中，如下：
 ```java
 try {
     // ...
@@ -308,8 +308,8 @@ try {
     // 使用 重试机制
     RetryStrategy retryStrategy = RetryStrategyFactory.getInstance(rpcConfig.getRetryStrategy());
     RpcResponse rpcResponse = retryStrategy.doRetry(() ->
-    VertxTcpClient.doRequest(rpcRequest, selectedServiceMetaInfo)
-);
+        VertxTcpClient.doRequest(rpcRequest, selectedServiceMetaInfo)
+    );
     return rpcResponse.getData();
 } catch (Exception e) {
     throw new RuntimeException("调用失败");
@@ -343,3 +343,28 @@ try {
 **采用方案**：系统错误时，先通过重试操作解决一些临时性的异常，比如网络波动、服务端临时不可用等；如果重试多次后仍然失败，说明可能存在更严重的问题，这时可以触发其他的容错策略，
 比如调用降级服务、熔断、限流、快速失败等，来减少异常的影响，保障系统的稳定性和可靠性。
 ### 实现
+1. **实现多种容错策略**：Fail-Fast 和 Fail-Safe； Fail-Over 和 Fail-Back 待扩展。
+2. **支持动态配置和扩展容错器**：SPI 机制和 工厂模式 实现。
+3. **服务消费端代理应用容错功能：重试与容错机制结合的方式，具体用法如下：
+```java
+// ...
+
+// rpc 请求
+RpcResponse rpcResponse;
+try {
+    // 使用 重试机制
+    RetryStrategy retryStrategy = RetryStrategyFactory.getInstance(rpcConfig.getRetryStrategy());
+    rpcResponse = retryStrategy.doRetry(() ->
+        VertxTcpClient.doRequest(rpcRequest, selectedServiceMetaInfo)
+    );
+} catch (Exception e) {
+    // 容错机制
+    TolerantStrategy tolerantStrategy = TolerantStrategyFactory.getInstance(rpcConfig.getTolerantStrategy());
+    rpcResponse = tolerantStrategy.doTolerant(null, e);
+}
+return rpcResponse.getData();
+```
+### 扩展
+- [ ] 实现 Fail-Back 容错机制：（参考）可参考 Dubbo 的 Mock 能力，让消费端指定调用失败后要执行的本地服务和方法。
+- [ ] 实现 Fail-Over 容错机制：（参考）可利用容错方法的上下文参数传递所有的服务节点和本次调用的服务节点，选择一个其他节点再次发起调用。
+- [ ] 实现更多容错方案：（参考）比如限流、熔断、超时控制等，或者将重试机制作为容错机制的一种策略来实现。
