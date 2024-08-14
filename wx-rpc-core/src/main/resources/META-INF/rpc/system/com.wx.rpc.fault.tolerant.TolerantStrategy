@@ -1,0 +1,4 @@
+failBack=com.wx.rpc.fault.tolerant.impl.FailBackTolerantStrategy
+failFast=com.wx.rpc.fault.tolerant.impl.FailFastTolerantStrategy
+failOver=com.wx.rpc.fault.tolerant.impl.FailOverTolerantStrategy
+failSafe=com.wx.rpc.fault.tolerant.impl.FailSafeTolerantStrategy

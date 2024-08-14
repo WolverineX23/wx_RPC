@@ -1,6 +1,7 @@
 package com.wx.rpc.config;
 
 import com.wx.rpc.fault.retry.RetryStrategyKeys;
+import com.wx.rpc.fault.tolerant.TolerantStrategyKeys;
 import com.wx.rpc.loadbalancer.LoadBalancerKeys;
 import com.wx.rpc.serializer.SerializerKeys;
 import lombok.Data;
@@ -57,4 +58,9 @@ public class RpcConfig {
      * 重试策略
      */
     private String retryStrategy = RetryStrategyKeys.NO;
+
+    /**
+     * 容错策略
+     */
+    private String tolerantStrategy = TolerantStrategyKeys.FAIL_FAST;
 }
