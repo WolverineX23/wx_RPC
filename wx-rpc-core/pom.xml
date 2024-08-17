@@ -13,7 +13,7 @@
         <maven.compiler.target>11</maven.compiler.target>
         <vertx.version>4.5.7</vertx.version>
         <hutool.version>5.7.16</hutool.version>
-        <lombok.version>1.18.16</lombok.version>
+        <lombok.version>1.18.30</lombok.version>
         <logback.version>1.3.12</logback.version>
         <hessian.vervion>4.0.66</hessian.vervion>
         <kryo.version>5.6.0</kryo.version>
@@ -40,13 +40,14 @@
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <version>${lombok.version}</version>
+            <scope>provided</scope>
         </dependency>
 
         <!-- 日志库 -->
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
-            <version>1.3.12</version>
+            <version>${logback.version}</version>
         </dependency>
 
         <dependency>
