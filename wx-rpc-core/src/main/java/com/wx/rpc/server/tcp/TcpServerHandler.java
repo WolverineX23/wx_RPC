@@ -34,7 +34,7 @@ public class TcpServerHandler implements Handler<NetSocket> {
         });
          */
 
-        // 装饰者模式 RecordParser增强处理
+        // 装饰者模式 RecordParser 增强处理
         TcpBufferHandlerWrapper bufferHandlerWrapper = new TcpBufferHandlerWrapper(buffer -> {
             // 接收请求，解码
             ProtocolMessage<RpcRequest> protocolMessage;
@@ -42,7 +42,7 @@ public class TcpServerHandler implements Handler<NetSocket> {
             try {
                 protocolMessage = (ProtocolMessage<RpcRequest>) ProtocolMessageDecoder.decode(buffer);
             } catch (IOException e) {
-                throw new RuntimeException("TPC 请求处理器：协议消息解码错误！");
+                throw new RuntimeException("TCP 请求处理器：协议消息解码错误！");
             }
             RpcRequest rpcRequest = protocolMessage.getBody();
 
@@ -74,7 +74,7 @@ public class TcpServerHandler implements Handler<NetSocket> {
                 Buffer encodeBuffer = ProtocolMessageEncoder.encode(responseProtocolMessage);
                 socket.write(encodeBuffer);
             } catch (IOException e) {
-                throw new RuntimeException("TPC 请求处理器：协议消息编码错误！");
+                throw new RuntimeException("TCP 请求处理器：协议消息编码错误！");
             }
         });
 

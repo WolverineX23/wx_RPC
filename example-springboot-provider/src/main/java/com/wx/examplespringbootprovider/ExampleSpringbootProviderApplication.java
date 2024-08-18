@@ -8,6 +8,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @EnableRpc
 public class ExampleSpringbootProviderApplication {
 
+    // todo bug：SLF4J: Failed to load class "org.slf4j.impl.StaticLoggerBinder".
     public static void main(String[] args) {
         SpringApplication.run(ExampleSpringbootProviderApplication.class, args);
     }

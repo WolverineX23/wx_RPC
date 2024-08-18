@@ -32,6 +32,8 @@ public class VertxTcpClient {
         Vertx vertx = Vertx.vertx();
         NetClient netClient = vertx.createNetClient();
         CompletableFuture<RpcResponse> responseFuture = new CompletableFuture<>();
+
+        // todo BUG：这里请求 localhost:8081 一直无响应
         netClient.connect(serviceMetaInfo.getServicePort(), serviceMetaInfo.getServiceHost(), result -> {
             if (result.succeeded()) {
                 System.out.println("Connected to TCP server");
