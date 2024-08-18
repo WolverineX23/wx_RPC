@@ -402,3 +402,48 @@ return rpcResponse.getData();
 实现注解驱动的两种常用方式：
 1. **主动扫描**：让开发者指定要扫描的路径，然后遍历所有的类文件，针对有注解的类文件，执行自定义的操作。
 2. **监听 Bean 加载**：在 Spring 项目中，可以通过实现 BeanPostProcessor 接口，在 Bean 初始化后执行自定义的操作。
+### 实现
+#### 启动机制实现
+1. **服务提供者启动类**：本质就是将原本服务提供者模块中 **rpc 初始化+服务注册+启动 Server 服务器** 的代码封装到 RPC 框架中，
+   服务提供者模块只需要调用 RPC 框架的方法并传参（要注册的服务信息列表）即可。
+2. **服务消费者启动类**：只需要**初始化 RPC 框架**，即加载 rpc 配置和注册中心初始化。
+#### Spring Boot Starter 注解驱动
+1. **Spring Boot Starter 项目初始化**：为了不和已有项目的代码混淆，创建一个新的 Spring 项目模块，专门实现 Spring Boot Starter 注解驱动的 RPC 框架。
+2. **定义注解**：这里我们遵循最小可用化原则，实现三个注解。
+   - ***`@EnableRpc`***：用于全局标识项目需要引入 RPC 框架、执行 RPC 初始化方法。 
+     由于服务提供者和消费者的初始化流程不同，故需在 `@EnableRpc` 中指定是否需要启动服务器等属性。
+   - ***`@RpcService`***：服务提供者注解，在需要注册和提供的服务类上使用。
+      其中需要指定服务注册信息属性，比如服务接口实现类、版本号等。
+   - ***`@RpcReference`***：服务消费者注解，在需要注入服务代理对象的属性上使用，类似 Spring 的 `@Resource` 注解。
+      其中需要指定调用服务相关的属性（对应 `ServiceProxy` 类），比如服务接口类（可能存在多个接口）、版本号、负载均衡器、重试策略、容错策略、是否 Mock 模拟调用等。
+   > **参考 Dubbo**：
+   > 
+   > @EnableDubbo：在 Spring Boot 主应用类上使用，用于**启动** Dubbo 功能。
+   > 
+   > @DubboComponentScan：在 Spring Boot 主应用类上使用，用于指定 Dubbo 组件**扫描**的包路径。
+   > 
+   > @DubboReference：在消费者中使用，用于声明 Dubbo **服务引用**。
+   > 
+   > @DubboService：在提供者中使用，用于声明 Dubbo 服务。（**注册**）
+   > 
+   > @DubboMethod：在提供者和消费者中使用，用于配置 Dubbo 方法的参数、超时时间等。
+   > 
+   > @DubboTransported：在 Dubbo 提供者和消费者中使用，用于指定传输协议和参数，例如传输协议的类型、端口等。
+3. 实现 **注解驱动**：
+   - **Rpc 框架 全局启动类`RpcInitBootstrap`**：Spring 框架初始化时，获取 @EnableRpc 注解的属性，并初始化 RPC，从属性值 `needServer` 来判断是否启动 Server 。
+      实现 Spring 的 ***`ImportBeanDefinitionRegistrar`接口*** ，重写 ***`registerBeanDefinitions`方法***，获取到项目的注解和注解属性。
+   - **Rpc 服务提供者启动类`RpcProviderBootstrap`**：获取到所有包含 `@RpcService` 注解的类，并通过注解和**反射**机制，获取到要注册的服务信息，最后完成服务注册。
+      - 获取所有包含 `@RpcService` 注解的类的方式：1）主动扫描包； 2）利用 Spring 的特性监听 Bean 的加载。
+      - 2）实现（获取服务提供者类的 Bean 对象）：实现 ***`BeanPostProcessor` 接口*** 的 ***`postProcessAfterInitialization` 方法***，
+         就可以在某个服务提供者 Bean 初始化后，执行注册服务等操作了。
+   - **Rpc 服务消费者启动类`RpcConsumerBootstrap`**：同上，在服务消费者类 Bean 初始化后，通过**反射**获取到 Bean 的所有属性，
+     如果属性包含 `@RpcReference` 注解，那么就为该属性动态生成代理对象并赋值。这里涉及到 `Field` 类的一些操作。
+   - **TODO**：服务消费者启动类目前仅关注了对象的类型（服务接口类），`@RpcReference` 中的其他属性都忽视了，
+     特别是 `serviceVersion`，并且 `ServiceProxy` 中获取服务注册地址时，版本号**写死为默认版本号**，这将造成消费者获取不到版本号为非默认版本的服务。
+### 测试
+**测试注解驱动**：新建两个 Sprint Boot 项目，分别演示 服务消费者 和 服务提供者。
+### TODO
+- [ ] Spring Boot Starter 项目支持读取 ***yml/yaml*** 配置文件来启动 RPC 框架
+- [ ] 服务提供者启动逻辑也可以改为 bean 后置执行为 “使用**组件扫描**”；
+- [ ] @RpcReference 注解，实现除了接口类外其他属性的配置，比如版本：（参考）ServiceProxy 将版本写死为默认版本号，可以修改为使用动态版本配置获取对应的注册服务。
+   
