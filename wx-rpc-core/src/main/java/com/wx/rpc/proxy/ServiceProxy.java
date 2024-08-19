@@ -63,9 +63,10 @@ public class ServiceProxy implements InvocationHandler {
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
         // 指定序列化器
-        final Serializer serializer = SerializerFactory.getInstance(RpcApplication.getRpcConfig().getSerializer());
+//        final Serializer serializer = SerializerFactory.getInstance(RpcApplication.getRpcConfig().getSerializer());
 
         // 构造请求
+        // fixme 注册中心服务的本地缓存不支持多个服务
         String serviceName = method.getDeclaringClass().getName();
         RpcRequest rpcRequest = RpcRequest.builder()
                 .serviceName(serviceName)
