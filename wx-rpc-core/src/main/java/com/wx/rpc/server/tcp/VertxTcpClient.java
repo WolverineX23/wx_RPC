@@ -33,45 +33,46 @@ public class VertxTcpClient {
         NetClient netClient = vertx.createNetClient();
         CompletableFuture<RpcResponse> responseFuture = new CompletableFuture<>();
 
-        // todo BUG：这里请求 localhost:8081 一直无响应
+        // fixed BUG：这里请求 localhost:8081 一直无响应 done：VertxTcpServer，请求处理端采用了测试代码的问题
         netClient.connect(serviceMetaInfo.getServicePort(), serviceMetaInfo.getServiceHost(), result -> {
-            if (result.succeeded()) {
-                System.out.println("Connected to TCP server");
-                NetSocket socket = result.result();
-
-                // 发送数据
-                // 构造信息
-                ProtocolMessage<RpcRequest> protocolMessage = new ProtocolMessage<>();
-                ProtocolMessage.Header header = new ProtocolMessage.Header();
-                header.setMagic(ProtocolConstant.PROTOCOL_MAGIC);
-                header.setVersion(ProtocolConstant.PROTOCOL_VERSION);
-                header.setSerializer((byte) ProtocolMessageSerializerEnum.getEnumByValue(RpcApplication.getRpcConfig().getSerializer()).getKey());
-                header.setType((byte) ProtocolMessageTypeEnum.REQUEST.getKey());
-                header.setRequestId(IdUtil.getSnowflake().nextId());    // hutool 雪花算法生成全局请求 ID
-                protocolMessage.setHeader(header);
-                protocolMessage.setBody(rpcRequest);
-
-                // 编码请求
-                try {
-                    Buffer encodeBuffer = ProtocolMessageEncoder.encode(protocolMessage);
-                    socket.write(encodeBuffer);
-                } catch (IOException e) {
-                    throw new RuntimeException("协议消息编码错误");
-                }
-
-                // 接收响应 - RecordParser 解决 半包/粘包问题
-                TcpBufferHandlerWrapper bufferHandlerWrapper = new TcpBufferHandlerWrapper(buffer -> {
-                    try {
-                        ProtocolMessage<RpcResponse> rpcResponseProtocolMessage = (ProtocolMessage<RpcResponse>) ProtocolMessageDecoder.decode(buffer);
-                        responseFuture.complete(rpcResponseProtocolMessage.getBody());
-                    } catch (IOException e) {
-                        throw new RuntimeException("协议消息解码错误");
-                    }
-                });
-                socket.handler(bufferHandlerWrapper);
-            } else {
+            if (!result.succeeded()) {
                 System.err.println("Failed to connect to TCP server");
+                return;
             }
+
+            System.out.println("Connected to TCP server");
+            NetSocket socket = result.result();
+
+            // 发送数据
+            // 构造信息
+            ProtocolMessage<RpcRequest> protocolMessage = new ProtocolMessage<>();
+            ProtocolMessage.Header header = new ProtocolMessage.Header();
+            header.setMagic(ProtocolConstant.PROTOCOL_MAGIC);
+            header.setVersion(ProtocolConstant.PROTOCOL_VERSION);
+            header.setSerializer((byte) ProtocolMessageSerializerEnum.getEnumByValue(RpcApplication.getRpcConfig().getSerializer()).getKey());
+            header.setType((byte) ProtocolMessageTypeEnum.REQUEST.getKey());
+            header.setRequestId(IdUtil.getSnowflake().nextId());    // hutool 雪花算法生成全局请求 ID
+            protocolMessage.setHeader(header);
+            protocolMessage.setBody(rpcRequest);
+
+            // 编码请求
+            try {
+                Buffer encodeBuffer = ProtocolMessageEncoder.encode(protocolMessage);
+                socket.write(encodeBuffer);
+            } catch (IOException e) {
+                throw new RuntimeException("协议消息编码错误");
+            }
+
+            // 接收响应 - RecordParser 解决 半包/粘包问题
+            TcpBufferHandlerWrapper bufferHandlerWrapper = new TcpBufferHandlerWrapper(buffer -> {
+                try {
+                    ProtocolMessage<RpcResponse> rpcResponseProtocolMessage = (ProtocolMessage<RpcResponse>) ProtocolMessageDecoder.decode(buffer);
+                    responseFuture.complete(rpcResponseProtocolMessage.getBody());
+                } catch (IOException e) {
+                    throw new RuntimeException("协议消息解码错误");
+                }
+            });
+            socket.handler(bufferHandlerWrapper);
         });
 
         // 阻塞，直到响应完成，才会继续向下执行

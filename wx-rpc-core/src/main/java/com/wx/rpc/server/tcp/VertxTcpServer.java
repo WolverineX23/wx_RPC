@@ -42,9 +42,9 @@ public class VertxTcpServer implements HttpServer {
         NetServer server = vertx.createNetServer();
 
         // 处理请求
-//        server.connectHandler(new TcpServerHandler());
+        server.connectHandler(new TcpServerHandler());
 
-        // test RecordParser 解决半包/粘包问题
+        /* test RecordParser 解决半包/粘包问题
         server.connectHandler(socket -> {
             // 构造 RecordParser
             RecordParser parser = RecordParser.newFixed(8); // 读取固定长度值的内容 - 测试中是 请求头的 两个 int 值
@@ -79,6 +79,7 @@ public class VertxTcpServer implements HttpServer {
 
             socket.handler(parser);
         });
+         */
 
         /* test 半包/粘包问题演示
         server.connectHandler(socket -> {
